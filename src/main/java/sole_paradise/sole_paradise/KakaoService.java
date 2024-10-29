@@ -6,6 +6,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
@@ -25,7 +26,7 @@ public class KakaoService {
     private static final String KAUTH_TOKEN_URL_HOST = "https://kauth.kakao.com";
     private static final String KAUTH_USER_URL_HOST = "https://kapi.kakao.com";
 
-    public Mono<String> getAccessTokenFromKakao(String code) {
+    public Mono<KakaoTokenResponseDto> getAccessTokenFromKakao(String code) {
         return WebClient.create(KAUTH_TOKEN_URL_HOST)
                 .post()
                 .uri(uriBuilder -> uriBuilder
@@ -36,57 +37,57 @@ public class KakaoService {
                         .build())
                 .retrieve()
                 .bodyToMono(KakaoTokenResponseDto.class)
-                .map(KakaoTokenResponseDto::getAccessToken)
-                .doOnNext(accessToken -> log.info("Access Token: {}", accessToken));
+                .doOnNext(token -> log.info("Access Token: {}", token.getAccessToken()));
     }
 
     public Mono<KakaoUserInfoResponseDto> getUserInfo(String accessToken) {
-        log.info("Using Access Token: {}", accessToken);
-
         return WebClient.create(KAUTH_USER_URL_HOST)
                 .get()
                 .uri("/v2/user/me")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
                 .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, response -> {
-                    log.error("4xx Error - Unauthorized or Invalid Request: {}", response.statusCode());
-                    return Mono.error(new RuntimeException("Client Error"));
-                })
-                .onStatus(HttpStatusCode::is5xxServerError, response -> {
-                    log.error("5xx Error - Server Issue: {}", response.statusCode());
-                    return Mono.error(new RuntimeException("Server Error"));
-                })
                 .bodyToMono(KakaoUserInfoResponseDto.class)
-                .doOnNext(this::saveUserInfo)
-                .doOnError(e -> log.error("Error retrieving user info", e));
+                .doOnNext(userInfo -> log.info("Retrieved user info for ID: {}", userInfo.getId()));
     }
 
     @Transactional
-    public void saveUserInfo(KakaoUserInfoResponseDto userInfo) {
+    public void saveUserInfo(KakaoUserInfoResponseDto userInfo, String refreshToken) {
         String email = userInfo.getKakaoAccount().getEmail();
         String profileNickname = userInfo.getKakaoAccount().getProfile().getNickname();
-        String nickname = null;  // 별명은 수동 입력할 수 있도록 null로 처리
-        String address = "";  // 주소 기본값은 빈 문자열로 설정
 
         if (email == null) {
-            log.error("User email is missing, cannot save user information.");
+            log.error("Email is missing. Cannot save user.");
             return;
         }
 
         User existingUser = userRepository.findByAccountEmail(email);
-
         if (existingUser != null) {
-            existingUser.setProfileNickname(profileNickname);  // 프로필 닉네임 업데이트
+            existingUser.setProfileNickname(profileNickname);
+            existingUser.setRefreshToken(refreshToken);
             userRepository.save(existingUser);
-            log.info("Updated existing user: {}", email);
+            log.info("Updated user: {}", email);
         } else {
             User newUser = new User();
             newUser.setAccountEmail(email);
             newUser.setProfileNickname(profileNickname);
-            newUser.setNickname(nickname);  // 별명은 사용자가 나중에 설정
-            newUser.setAddress(address);  // 주소 기본값을 빈 문자열로 설정
+            newUser.setRefreshToken(refreshToken);
             userRepository.save(newUser);
             log.info("Saved new user: {}", email);
         }
+    }
+
+    public Mono<String> refreshAccessToken(String refreshToken) {
+        return WebClient.create(KAUTH_TOKEN_URL_HOST)
+                .post()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/oauth/token")
+                        .queryParam("grant_type", "refresh_token")
+                        .queryParam("client_id", clientId)
+                        .queryParam("refresh_token", refreshToken)
+                        .build())
+                .retrieve()
+                .bodyToMono(KakaoTokenResponseDto.class)
+                .map(KakaoTokenResponseDto::getAccessToken)
+                .doOnNext(newAccessToken -> log.info("New Access Token: {}", newAccessToken));
     }
 }

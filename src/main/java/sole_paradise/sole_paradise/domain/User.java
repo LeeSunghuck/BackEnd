@@ -9,7 +9,6 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.Set;
 
 @Getter
@@ -45,6 +44,9 @@ public class User {
 
     @Column(nullable = true, length = 500)  // VARCHAR(500) 설정
     private String address;  // Boolean -> String으로 변경
+
+    @Column(length = 500, nullable = true)  // Refresh Token 필드 추가
+    private String refreshToken;  // Refresh Token 저장
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Cart> userCarts;

@@ -22,25 +22,25 @@ public class KakaoLoginController {
     @GetMapping("/test")
     public Mono<ResponseEntity<Object>> test(@RequestParam("code") String code) {
         return kakaoService.getAccessTokenFromKakao(code)
-                .flatMap(accessToken -> kakaoService.getUserInfo(accessToken)
-                    .flatMap(userInfo -> {
-                        // 사용자 정보 저장 및 로그 남기기
-                        kakaoService.saveUserInfo(userInfo);
-                        log.info("User information saved successfully for user: {}", userInfo.getId());
+                .flatMap(response -> {
+                    String accessToken = response.getAccessToken();
+                    String refreshToken = response.getRefreshToken();
 
-                        // 메인 페이지로 리다이렉트 (302 Found)
-                        return Mono.just(
-                            ResponseEntity.status(HttpStatus.FOUND)
-                                .header("Location", "/main")  // 리다이렉트할 경로 설정
-                                .build()
-                        );
-                    }))
+                    return kakaoService.getUserInfo(accessToken)
+                        .flatMap(userInfo -> {
+                            kakaoService.saveUserInfo(userInfo, refreshToken);
+                            log.info("User information saved for user: {}", userInfo.getId());
+
+                            return Mono.just(
+                                    ResponseEntity.status(HttpStatus.FOUND)
+                                            .header("Location", "http://localhost:5173/main")
+                                            .build()
+                            );
+                        });
+                })
                 .onErrorResume(e -> {
-                    // 에러 발생 시 로그 남기고 500 응답 반환
-                    log.error("Failed to save user information", e);
-                    return Mono.just(
-                        ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-                    );
+                    log.error("Error during login", e);
+                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
                 });
     }
 }
