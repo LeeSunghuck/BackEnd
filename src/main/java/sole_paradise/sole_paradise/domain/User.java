@@ -1,25 +1,27 @@
 package sole_paradise.sole_paradise.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Set;
-import lombok.Getter;
-import lombok.Setter;
 
-
-@Entity
 @Getter
 @Setter
+@NoArgsConstructor
+@Entity(name = "user")
+@EntityListeners(AuditingEntityListener.class)
 public class User {
 
     @Id
-    @Column(nullable = false, updatable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id", nullable = false, updatable = false)
     private Integer userId;
 
     @Column(nullable = false)
@@ -28,43 +30,22 @@ public class User {
     @Column(nullable = false)
     private String profileNickname;
 
-    @Column(columnDefinition = "longtext")
+    @Column(columnDefinition = "longtext", nullable = true)
     private String userPicture;
 
-    @Column(nullable = false, length = 50)
+    @Column(length = 50, nullable = true)  // 별명은 사용자가 나중에 설정할 수 있도록 null 허용
     private String nickname;
 
-    @Column(nullable = false)
-    private OffsetDateTime createdAt;
+    @CreatedDate
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
 
-    @Column
-    private OffsetDateTime updatedAt;
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
 
-    @Column(nullable = false, columnDefinition = "tinyint", length = 1)
-    private Boolean address;
+    @Column(nullable = true, length = 500)  // VARCHAR(500) 설정
+    private String address;  // Boolean -> String으로 변경
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Cart> userCarts;
-
-    @OneToMany(mappedBy = "user")
-    private Set<Order> userOrders;
-
-    @OneToMany(mappedBy = "user")
-    private Set<WalkRoute> userWalkRoutes;
-
-    @OneToMany(mappedBy = "user")
-    private Set<Pet> userPets;
-
-    @OneToMany(mappedBy = "user")
-    private Set<PetItem> userPetItems;
-
-    @OneToMany(mappedBy = "user")
-    private Set<PetItemComment> userPetItemComments;
-
-    @OneToMany(mappedBy = "user")
-    private Set<Community> userCommunities;
-
-    @OneToMany(mappedBy = "user")
-    private Set<CommunityComment> userCommunityComments;
-
 }

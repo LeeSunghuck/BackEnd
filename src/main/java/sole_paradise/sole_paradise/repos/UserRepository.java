@@ -5,4 +5,5 @@ import sole_paradise.sole_paradise.domain.User;
 
 
 public interface UserRepository extends JpaRepository<User, Integer> {
+	User findByAccountEmail(String email);
 }

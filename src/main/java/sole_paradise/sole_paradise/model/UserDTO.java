@@ -2,6 +2,8 @@ package sole_paradise.sole_paradise.model;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import lombok.Getter;
 import lombok.Setter;
@@ -28,11 +30,11 @@ public class UserDTO {
     private String nickname;
 
     @NotNull
-    private OffsetDateTime createdAt;
+    private LocalDateTime createdAt;
 
-    private OffsetDateTime updatedAt;
+    private LocalDateTime updatedAt;
 
     @NotNull
-    private Boolean address;
+    private String address;
 
 }
