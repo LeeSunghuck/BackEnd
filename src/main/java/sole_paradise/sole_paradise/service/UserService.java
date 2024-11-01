@@ -1,8 +1,10 @@
 package sole_paradise.sole_paradise.service;
 
+
 import java.util.List;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+
 import sole_paradise.sole_paradise.domain.Cart;
 import sole_paradise.sole_paradise.domain.Community;
 import sole_paradise.sole_paradise.domain.CommunityComment;
@@ -24,11 +26,8 @@ import sole_paradise.sole_paradise.repos.UserRepository;
 import sole_paradise.sole_paradise.repos.WalkRouteRepository;
 import sole_paradise.sole_paradise.util.NotFoundException;
 import sole_paradise.sole_paradise.util.ReferencedWarning;
-
-
 @Service
 public class UserService {
-
     private final UserRepository userRepository;
     private final CartRepository cartRepository;
     private final OrderRepository orderRepository;
@@ -38,7 +37,6 @@ public class UserService {
     private final PetItemCommentRepository petItemCommentRepository;
     private final CommunityRepository communityRepository;
     private final CommunityCommentRepository communityCommentRepository;
-
     public UserService(final UserRepository userRepository, final CartRepository cartRepository,
             final OrderRepository orderRepository, final WalkRouteRepository walkRouteRepository,
             final PetRepository petRepository, final PetItemRepository petItemRepository,
@@ -55,37 +53,31 @@ public class UserService {
         this.communityRepository = communityRepository;
         this.communityCommentRepository = communityCommentRepository;
     }
-
     public List<UserDTO> findAll() {
         final List<User> users = userRepository.findAll(Sort.by("userId"));
         return users.stream()
                 .map(user -> mapToDTO(user, new UserDTO()))
                 .toList();
     }
-
     public UserDTO get(final Integer userId) {
         return userRepository.findById(userId)
                 .map(user -> mapToDTO(user, new UserDTO()))
                 .orElseThrow(NotFoundException::new);
     }
-
     public Integer create(final UserDTO userDTO) {
         final User user = new User();
         mapToEntity(userDTO, user);
         return userRepository.save(user).getUserId();
     }
-
     public void update(final Integer userId, final UserDTO userDTO) {
         final User user = userRepository.findById(userId)
                 .orElseThrow(NotFoundException::new);
         mapToEntity(userDTO, user);
         userRepository.save(user);
     }
-
     public void delete(final Integer userId) {
         userRepository.deleteById(userId);
     }
-
     private UserDTO mapToDTO(final User user, final UserDTO userDTO) {
         userDTO.setUserId(user.getUserId());
         userDTO.setAccountEmail(user.getAccountEmail());
@@ -95,9 +87,9 @@ public class UserService {
         userDTO.setCreatedAt(user.getCreatedAt());
         userDTO.setUpdatedAt(user.getUpdatedAt());
         userDTO.setAddress(user.getAddress());
+        userDTO.setPhoneNumber(user.getPhoneNumber());
         return userDTO;
     }
-
     private User mapToEntity(final UserDTO userDTO, final User user) {
         user.setAccountEmail(userDTO.getAccountEmail());
         user.setProfileNickname(userDTO.getProfileNickname());
@@ -106,9 +98,9 @@ public class UserService {
         user.setCreatedAt(userDTO.getCreatedAt());
         user.setUpdatedAt(userDTO.getUpdatedAt());
         user.setAddress(userDTO.getAddress());
+        user.setPhoneNumber(userDTO.getPhoneNumber());
         return user;
     }
-
     public ReferencedWarning getReferencedWarning(final Integer userId) {
         final ReferencedWarning referencedWarning = new ReferencedWarning();
         final User user = userRepository.findById(userId)
@@ -163,5 +155,4 @@ public class UserService {
         }
         return null;
     }
-
 }

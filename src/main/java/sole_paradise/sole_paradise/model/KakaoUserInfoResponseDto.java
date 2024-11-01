@@ -1,4 +1,4 @@
-package sole_paradise.sole_paradise;
+package sole_paradise.sole_paradise.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;

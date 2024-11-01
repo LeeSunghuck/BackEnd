@@ -19,7 +19,6 @@ import sole_paradise.sole_paradise.service.UserService;
 import sole_paradise.sole_paradise.util.ReferencedException;
 import sole_paradise.sole_paradise.util.ReferencedWarning;
 
-
 @RestController
 @RequestMapping(value = "/api/users", produces = MediaType.APPLICATION_JSON_VALUE)
 public class UserResource {

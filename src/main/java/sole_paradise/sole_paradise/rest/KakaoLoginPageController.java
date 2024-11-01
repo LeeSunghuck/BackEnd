@@ -1,4 +1,4 @@
-package sole_paradise.sole_paradise;
+package sole_paradise.sole_paradise.rest;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;

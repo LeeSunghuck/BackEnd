@@ -48,6 +48,9 @@ public class User {
     @Column(length = 500, nullable = true)  // Refresh Token 필드 추가
     private String refreshToken;  // Refresh Token 저장
 
+    @Column(length = 20, nullable = true) // 전화번호 추가
+    private String phoneNumber;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Cart> userCarts;
 }
